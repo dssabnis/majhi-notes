@@ -1,6 +1,6 @@
 // माझी नोट्स service worker: offline app shell + Android share target.
 // When you change app files, bump VERSION so phones fetch the new files.
-const VERSION = 'majhi-notes-v1.0.8';
+const VERSION = 'majhi-notes-v1.0.9';
 const BASE = new URL('./', self.location).href;
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest', 'app.css',
@@ -14,7 +14,8 @@ const SHELL = [
 ].map(p => new URL(p, BASE).href);
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the browser's HTTP cache so a new version never stores old files.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -57,7 +58,8 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       try {
-        const r = await fetch(req);
+        const r = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
+        if (r.redirected) return Response.redirect(r.url, 302);
         if (r.ok) { const c = await caches.open(VERSION); c.put(new URL('index.html', BASE).href, r.clone()); }
         return r;
       } catch (err) {
@@ -73,7 +75,8 @@ self.addEventListener('fetch', e => {
     const cached = await cache.match(req, { ignoreSearch: true });
     if (immutable && cached) return cached;
     try {
-      const r = await fetch(req);
+      // no-cache: always check GitHub for a newer file (cheap 304 when unchanged).
+      const r = await fetch(req, immutable ? undefined : { cache: 'no-cache' });
       if (r.ok) cache.put(req, r.clone());
       return r;
     } catch (err) {
