@@ -1,6 +1,6 @@
 // माझी नोट्स service worker: offline app shell + Android share target.
 // When you change app files, bump VERSION so phones fetch the new files.
-const VERSION = 'majhi-notes-v1.0.5';
+const VERSION = 'majhi-notes-v1.0.6';
 const BASE = new URL('./', self.location).href;
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest', 'app.css',

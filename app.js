@@ -316,7 +316,8 @@ export function renderNav() {
     items.push(navItem(sv.title, '🔖', v.kind === 'smart' && v.id === sv.id, notes.filter(viewFilter({ kind: 'smart', id: sv.id })).length, () => setView({ kind: 'smart', id: sv.id }),
       { key: 'smart-' + sv.id, menu: e => X.smartViewMenu(e.currentTarget, sv) }));
   }
-  for (const [k, icon] of WIDE_VIEWS) items.push(navItem(t('view_' + k), icon, v.kind === k, null, () => setView({ kind: k }), { key: k }));
+  const wideCount = { files: S.store.list('file').length, moments: notes.filter(n => n.moment && !n.trashed).length, authenticator: S.store.list('totp').length };
+  for (const [k, icon] of WIDE_VIEWS) items.push(navItem(t('view_' + k), icon, v.kind === k, wideCount[k], () => setView({ kind: k }), { key: k }));
 
   items.push(h('div', { class: 'nav-sec' }, t('folders'), h('button', { type: 'button', class: 'icon-btn tiny', 'data-act': 'add-folder', title: t('newFolder'), 'aria-label': t('newFolder'), onclick: () => X.newFolder(null) }, '+')));
   items.push(...tree('folder', null, 0, notes));
@@ -451,7 +452,7 @@ export function renderList() {
 
 function noteRow(n) {
   const locked = !!n.lockHash;
-  const preview = locked ? '🔒 ' + t('lockedNote') : plainOf(n).slice(0, 140);
+  const preview = !S.settings.listPreview ? '' : locked ? '🔒 ' + t('lockedNote') : plainOf(n).slice(0, 140);
   const tags = (n.tags || []).map(id => S.store.get(id)).filter(Boolean);
   return h('div', {
     class: 'note-row' + (n.id === S.noteId ? ' active' : ''), role: 'listitem', tabindex: '0', 'data-id': n.id,
@@ -460,9 +461,9 @@ function noteRow(n) {
   h('div', { class: 'nr-top' },
     h('span', { class: 'nr-title' }, n.title || t('untitled')),
     h('span', { class: 'nr-flags' }, n.pinned ? '📌' : '', n.starred ? '⭐' : '', locked ? '🔒' : '', n.readOnly ? '🛡' : '', n.conflictOf ? '⚠' : '')),
-  h('div', { class: 'nr-prev' }, preview),
-  h('div', { class: 'nr-meta' }, h('span', { class: 'type-badge' }, t('type_' + n.noteType)), ' ', formatTime(n.updatedAt),
-    tags.length ? h('span', { class: 'nr-tags' }, ...tags.slice(0, 3).map(tg => h('span', { class: 'tag-mini' }, '#' + tg.title))) : null));
+  S.settings.listPreview ? h('div', { class: 'nr-prev' }, preview) : null,
+  S.settings.listPreview ? h('div', { class: 'nr-meta' }, h('span', { class: 'type-badge' }, t('type_' + n.noteType)), ' ', formatTime(n.updatedAt),
+    tags.length ? h('span', { class: 'nr-tags' }, ...tags.slice(0, 3).map(tg => h('span', { class: 'tag-mini' }, '#' + tg.title))) : null) : null);
 }
 
 function sortMenu(anchor) {

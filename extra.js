@@ -620,6 +620,7 @@ export async function openSettings() {
       h('label', { class: 'lbl block' }, t('language')), sel('lang', [['mr', 'मराठी'], ['en', 'English']], () => { setLang(S.settings.lang); m.close(); renderApp(); }),
       h('label', { class: 'lbl block' }, t('theme')), sel('theme', [['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]], applyTheme),
       h('label', { class: 'lbl block' }, t('defaultType')), sel('defaultType', NOTE_TYPES.map(x => [x, t('type_' + x)])),
+      h('label', { class: 'lbl block' }, t('listShow')), sel('listPreview', [['', t('listTitleOnly')], ['1', t('listWithPreview')]], () => renderList()),
       h('label', { class: 'lbl block' }, t('voiceLang')), sel('voiceLang', [['mr-IN', 'मराठी (mr-IN)'], ['en-IN', 'English (en-IN)']])),
     h('section', {}, h('h3', {}, t('security')),
       h('p', { class: 'muted small' }, t('passcodeHelp')),
