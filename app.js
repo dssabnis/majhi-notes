@@ -102,7 +102,7 @@ export function renderSignIn(errMsg) {
       const acc = await S.auth.signIn();
       await openAccount(acc);
     } catch (e) {
-      console.warn('sign-in', e);
+      console.warn('sign-in', e); if (window.__showFatal) window.__showFatal('sign-in: ' + (e && (e.stack || e.message) || e));
       btn.disabled = false;
       renderSignIn(signInError(e));
     }

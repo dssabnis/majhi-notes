@@ -13,6 +13,12 @@
   <link rel="stylesheet" href="material-darker.css">
   <link rel="stylesheet" id="hljs-theme" href="hljs-light.css">
   <link rel="stylesheet" href="app.css">
+  <script>
+  (function(){function show(m){try{var d=document.getElementById('fatal-err');if(!d){d=document.createElement('pre');d.id='fatal-err';d.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:45vh;overflow:auto;margin:0;padding:10px;background:#fff3f3;color:#900;font:12px/1.4 monospace;z-index:99999;white-space:pre-wrap;border-top:2px solid #900';(document.body||document.documentElement).appendChild(d);}d.textContent+='त्रुटी / Error: '+m+'\n';}catch(e){}}
+  window.addEventListener('error',function(e){show((e.message||'')+' @ '+(e.filename||'').split('/').pop()+':'+(e.lineno||'')+(e.error&&e.error.stack?'\n'+e.error.stack:''));});
+  window.addEventListener('unhandledrejection',function(e){var r=e.reason;show('Promise: '+(r&&(r.stack||r.message)||String(r)));});
+  window.__showFatal=show;})();
+  </script>
   <script src="config.js"></script>
   <script src="purify.min.js" defer></script>
   <script src="marked.min.js" defer></script>
