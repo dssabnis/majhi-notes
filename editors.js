@@ -418,6 +418,19 @@ export function mountSheet(el, note, opts) {
     return g;
   }
 
+  const urlOf = v => {
+    const m = typeof v === 'string' && v.trim().match(/^(https?:\/\/\S+|www\.\S+\.\S+)$/i);
+    return m ? (/^www\./i.test(m[1]) ? 'https://' + m[1] : m[1]) : null;
+  };
+  function linkBtn(td, ref) {
+    const old = td.querySelector('.cell-link'); if (old) old.remove();
+    const url = urlOf(values[ref]);
+    td.classList.toggle('has-link', !!url);
+    if (!url) return;
+    td.append(h('button', { type: 'button', class: 'cell-link', title: t('openLink'), 'aria-label': t('openLink'), tabindex: '-1',
+      onpointerdown: e => e.preventDefault(),
+      onclick: e => { e.preventDefault(); e.stopPropagation(); window.open(url, '_blank', 'noopener'); } }, '↗'));
+  }
   function draw() {
     const head = h('tr', {}, h('th', { class: 'corner' }), ...Array.from({ length: data.cols }, (_, c) => h('th', { class: 'ch' }, h('div', { class: 'hd' }, colName(c), grip('c', c)))));
     const rows = Array.from({ length: data.rows }, (_, r) => h('tr', {}, h('th', { class: 'rh' }, h('div', { class: 'hd', 'data-r': String(r), style: `height:${rowH(r)}px` }, String(r + 1), grip('r', r))),
@@ -429,7 +442,8 @@ export function mountSheet(el, note, opts) {
         inp.value = displayValue(values[ref]);
         if (typeof values[ref] === 'number') inp.classList.add('num');
         if (values[ref] && values[ref].err) inp.classList.add('err');
-        return h('td', {}, inp);
+        const td = h('td', {}, inp); linkBtn(td, ref);
+        return td;
       })));
     table.replaceChildren(h('thead', {}, head), h('tbody', {}, ...rows));
   }
@@ -441,12 +455,17 @@ export function mountSheet(el, note, opts) {
       inp.value = displayValue(values[ref]);
       inp.classList.toggle('num', typeof values[ref] === 'number');
       inp.classList.toggle('err', !!(values[ref] && values[ref].err));
+      linkBtn(inp.parentNode, ref);
     });
   }
   function setRaw(ref, v) {
     if (v === '') delete data.cells[ref]; else data.cells[ref] = v;
     save();
   }
+  table.addEventListener('click', e => {
+    const inp = e.target.closest('input.cell'); if (!inp || !(e.ctrlKey || e.metaKey)) return;
+    const url = urlOf(values[inp.dataset.ref]); if (url) { e.preventDefault(); window.open(url, '_blank', 'noopener'); }
+  });
   table.addEventListener('focusin', e => {
     const inp = e.target.closest('input.cell'); if (!inp) return;
     active = inp.dataset.ref; addr.textContent = active;
