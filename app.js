@@ -13,7 +13,7 @@ import { noteToPlain, noteToMarkdown, parseTasks, serializeTasks, sheetToMarkdow
 import { parseSheet } from './sheet.js';
 import * as X from './extra.js';
 
-export const APP_VERSION = '1.0.9';
+export const APP_VERSION = '1.0.10';
 export const NOTE_TYPES = ['plain', 'super', 'markdown', 'code', 'sheet', 'tasks'];
 const MAX_FILE = 50 * 1024 * 1024;
 

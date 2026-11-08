@@ -193,16 +193,17 @@ input.cell { box-sizing: border-box; width: 110px; border: 0; padding: 7px 8px; 
 input.cell.num { text-align: right; font-variant-numeric: tabular-nums; }
 input.cell.err { color: var(--danger); font-weight: 700; }
 table.sheet th.ch, table.sheet th.rh { padding: 0; }
-table.sheet .hd { position: relative; display: block; padding: 2px 14px 2px 6px; }
+table.sheet .hd { position: relative; display: block; padding: 2px 16px 2px 6px; user-select: none; -webkit-user-select: none; }
+@media (pointer: coarse) { table.sheet th.ch .hd { padding-right: 26px; } }
 table.sheet th.rh .hd { padding: 0 6px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .grip { position: absolute; z-index: 2; touch-action: none; user-select: none; }
 .grip::after { content: ''; position: absolute; background: var(--muted); opacity: .35; border-radius: 2px; }
-.grip-c { top: 0; right: -7px; width: 14px; height: 100%; cursor: col-resize; }
-.grip-c::after { left: 6px; top: 20%; width: 2px; height: 60%; }
-.grip-r { left: 0; bottom: -7px; height: 14px; width: 100%; cursor: row-resize; }
-.grip-r::after { top: 6px; left: 20%; height: 2px; width: 60%; }
+.grip-c { top: 0; right: 0; width: 14px; height: 100%; cursor: col-resize; }
+.grip-c::after { right: 0; top: 20%; width: 2px; height: 60%; }
+.grip-r { left: 0; bottom: 0; height: 12px; width: 100%; cursor: row-resize; }
+.grip-r::after { bottom: 0; left: 20%; height: 2px; width: 60%; }
 .grip:hover::after, .grip.dragging::after { background: var(--accent); opacity: 1; }
-@media (pointer: coarse) { .grip-c { width: 22px; right: -11px; } .grip-c::after { left: 10px; } .grip-r { height: 22px; bottom: -11px; } .grip-r::after { top: 10px; } }
+@media (pointer: coarse) { .grip-c { width: 24px; } .grip-r { height: 18px; } }
 input.cell:focus { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--panel); }
 
 /* tasks */
