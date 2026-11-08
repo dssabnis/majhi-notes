@@ -351,7 +351,12 @@ export async function previewFile(f) {
 export function renderFiles(el) {
   const files = S.store.list('file').sort((a, b) => b.createdAt - a.createdAt);
   el.replaceChildren(
-    listHead(t('view_files')),
+    listHead(t('view_files'), h('button', { type: 'button', class: 'btn small primary', 'data-act': 'upload-file', onclick: async () => {
+      const picked = await pickFiles({ accept: 'image/*,application/pdf,audio/*,video/*,*/*', multiple: true });
+      if (!picked.length) return;
+      const ids = await addFiles(picked, null);
+      if (ids.length) { toast(t('attached', { n: ids.length })); renderFiles(el); }
+    } }, '＋ ' + t('attach'))),
     h('div', { class: 'wide-body' },
       files.length ? h('div', { class: 'file-list' }, ...files.map(f => {
         const note = f.noteId ? S.store.get(f.noteId) : null;
