@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="mr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>माझी नोट्स</title>
+  <meta name="description" content="माझी नोट्स — तुमच्या Google Drive मध्ये साठवणारे, ऑफलाइन चालणारे नोट्स अ‍ॅप.">
+  <meta name="theme-color" content="#2f5d50">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="codemirror.css">
+  <link rel="stylesheet" href="material-darker.css">
+  <link rel="stylesheet" id="hljs-theme" href="hljs-light.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="config.js"></script>
+  <script src="purify.min.js" defer></script>
+  <script src="marked.min.js" defer></script>
+  <script src="highlight.min.js" defer></script>
+  <script src="turndown.browser.umd.js" defer></script>
+  <script src="jszip.min.js" defer></script>
+  <script src="jsQR.js" defer></script>
+  <script src="codemirror.js" defer></script>
+  <script src="modes.js" defer></script>
+  <script src="addons.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="screen" hidden></div>
+  <div id="app" hidden></div>
+  <div id="lock-screen" class="screen" hidden></div>
+  <div id="modal-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript>हे अ‍ॅप चालण्यासाठी JavaScript चालू असणे आवश्यक आहे.</noscript>
+</body>
+</html>
