@@ -101,6 +101,29 @@ export class SyncEngine {
     const files = await this.drive.list(query);
     files.sort((a, b) => String(a.modifiedTime).localeCompare(String(b.modifiedTime)));
     let maxMod = cursor;
+    // Download changed items in parallel (8 at a time), then apply them in order.
+    const need = files.filter(f => {
+      const ap = f.appProperties || {};
+      if (!ap.iid || (ap.kind && ap.kind !== 'item')) return false;
+      const l = this.store.getAny(ap.iid);
+      return !(l && l._rid === f.id && Number(ap.upd || 0) <= (l._rupd || 0));
+    });
+    const pending = new Map();
+    let next = 0;
+    const worker = async () => {
+      while (next < need.length) {
+        const f = need[next++];
+        const p = this.drive.getJSON(f.id);
+        pending.set(f.id, p);
+        try { await p; } catch (e) { /* surfaced when applied */ }
+      }
+    };
+    const pool = Promise.all(Array.from({ length: Math.min(8, need.length) }, worker));
+    const fetchItem = async (id) => {
+      while (!pending.has(id)) { await new Promise(r => setTimeout(r, 0)); if (next >= need.length && !pending.has(id)) break; }
+      return pending.has(id) ? pending.get(id) : this.drive.getJSON(id);
+    };
+    try {
     for (const f of files) {
       if (!maxMod || f.modifiedTime > maxMod) maxMod = f.modifiedTime;
       const ap = f.appProperties || {};
@@ -113,7 +136,7 @@ export class SyncEngine {
         await this._tryRemove(local._rid);
       } else if (local && local._rid === f.id && upd <= (local._rupd || 0)) continue;
 
-      const remote = await this.drive.getJSON(f.id);
+      const remote = await fetchItem(f.id);
       if (!remote || remote.id !== ap.iid) continue;
       stats.pulled = (stats.pulled || 0) + 1;
       local = this.store.getAny(ap.iid); // may have changed while downloading
@@ -132,6 +155,7 @@ export class SyncEngine {
         await this.store.putFromRemote({ ...res.copy, _dirty: 1 });
       }
     }
+    } finally { next = need.length; await pool.catch(() => {}); }
     if (doFull) this.lastFull = this.now();
     if (maxMod && maxMod !== cursor) await db.setMeta('cursor', maxMod);
   }
