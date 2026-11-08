@@ -192,7 +192,9 @@ table.sheet td { border: 1px solid var(--line); padding: 0; }
 input.cell { box-sizing: border-box; width: 110px; border: 0; padding: 7px 8px; background: transparent; min-height: 38px; }
 input.cell.num { text-align: right; font-variant-numeric: tabular-nums; }
 input.cell.err { color: var(--danger); font-weight: 700; }
-table.sheet th.ch { padding-right: 14px; }
+table.sheet th.ch, table.sheet th.rh { padding: 0; }
+table.sheet .hd { position: relative; display: block; padding: 2px 14px 2px 6px; }
+table.sheet th.rh .hd { padding: 0 6px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .grip { position: absolute; z-index: 2; touch-action: none; user-select: none; }
 .grip::after { content: ''; position: absolute; background: var(--muted); opacity: .35; border-radius: 2px; }
 .grip-c { top: 0; right: -7px; width: 14px; height: 100%; cursor: col-resize; }

@@ -381,6 +381,7 @@ export function mountSheet(el, note, opts) {
   function applySize(kind, i, px) {
     const sel = kind === 'c' ? `input.cell[data-c="${i}"]` : `input.cell[data-r="${i}"]`;
     table.querySelectorAll(sel).forEach(inp => { if (kind === 'c') inp.style.width = px + 'px'; else inp.style.height = px + 'px'; });
+    if (kind === 'r') { const hd = table.querySelector(`th.rh .hd[data-r="${i}"]`); if (hd) hd.style.height = px + 'px'; }
   }
   function setSize(kind, i, px) {
     const key = kind === 'c' ? 'colW' : 'rowH';
@@ -418,8 +419,8 @@ export function mountSheet(el, note, opts) {
   }
 
   function draw() {
-    const head = h('tr', {}, h('th', { class: 'corner' }), ...Array.from({ length: data.cols }, (_, c) => h('th', { class: 'ch' }, colName(c), grip('c', c))));
-    const rows = Array.from({ length: data.rows }, (_, r) => h('tr', {}, h('th', { class: 'rh' }, String(r + 1), grip('r', r)),
+    const head = h('tr', {}, h('th', { class: 'corner' }), ...Array.from({ length: data.cols }, (_, c) => h('th', { class: 'ch' }, h('div', { class: 'hd' }, colName(c), grip('c', c)))));
+    const rows = Array.from({ length: data.rows }, (_, r) => h('tr', {}, h('th', { class: 'rh' }, h('div', { class: 'hd', 'data-r': String(r), style: `height:${rowH(r)}px` }, String(r + 1), grip('r', r))),
       ...Array.from({ length: data.cols }, (_, c) => {
         const ref = refName(c, r);
         const inp = h('input', { class: 'cell', 'data-ref': ref, 'data-c': String(c), 'data-r': String(r), 'aria-label': ref, readOnly: !!opts.readOnly });
