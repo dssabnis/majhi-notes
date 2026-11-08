@@ -225,3 +225,52 @@ export function parseSheet(text) {
   s.rows = Math.max(20, lines.length + 5);
   return s;
 }
+
+// Insert (delta=+1) or delete (delta=-1) one row (axis 'r') or column (axis 'c') at index `at`.
+// Moves cells, sizes, and rewrites formula references like a normal spreadsheet.
+export function shiftSheet(data, axis, at, delta) {
+  const isR = axis === 'r';
+  const move = i => (delta < 0 ? (i === at ? null : i > at ? i - 1 : i) : (i >= at ? i + 1 : i));
+  const fixRef = (dc, cs, rs, dr) => { // returns new text or null if deleted
+    const c = colIndex(cs), r = parseInt(rs, 10) - 1;
+    const n = move(isR ? r : c); if (n == null) return null;
+    return isR ? dc + cs + dr + (n + 1) : dc + colName(n) + dr + (r + 1);
+  };
+  const REF = /(\$?)([A-Za-z]{1,3})(\$?)(\d{1,5})/;
+  const rewrite = f => {
+    if (typeof f !== 'string' || f[0] !== '=') return f;
+    return f.split(/("[^"]*")/).map(part => {
+      if (part[0] === '"') return part;
+      part = part.replace(new RegExp(REF.source + ':' + REF.source, 'g'), (all, a1, c1, b1, r1, a2, c2, b2, r2) => {
+        let s1 = isR ? parseInt(r1, 10) - 1 : colIndex(c1), s2 = isR ? parseInt(r2, 10) - 1 : colIndex(c2);
+        let lo = Math.min(s1, s2), hi = Math.max(s1, s2);
+        if (delta < 0) {
+          if (lo === at && hi === at) return '#REF!';
+          if (hi >= at) hi--; if (lo > at) lo--;
+        } else { if (lo >= at) lo++; if (hi >= at) hi++; }
+        const mk = (a, c, b, r, v) => isR ? a + c + b + (v + 1) : a + colName(v) + b + r;
+        return mk(a1, c1, b1, r1, lo) + ':' + mk(a2, c2, b2, r2, hi);
+      });
+      return part.replace(new RegExp('(^|[^A-Za-z0-9!$#:])' + REF.source + '(?![A-Za-z0-9(:!])', 'g'), (all, pre, a, c, b, r) => {
+        const nr = fixRef(a, c.toUpperCase(), r, b);
+        return pre + (nr == null ? '#REF!' : nr);
+      });
+    }).join('');
+  };
+  const cells = {};
+  for (const [k, v] of Object.entries(data.cells)) {
+    const p = parseRef(k); if (!p) continue;
+    const n = move(isR ? p.r : p.c); if (n == null) continue;
+    cells[isR ? refName(p.c, n) : refName(n, p.r)] = rewrite(v);
+  }
+  data.cells = cells;
+  const key = isR ? 'rowH' : 'colW';
+  if (data[key]) {
+    const o = {};
+    for (const [i, v] of Object.entries(data[key])) { const n = move(+i); if (n != null) o[n] = v; }
+    if (Object.keys(o).length) data[key] = o; else delete data[key];
+  }
+  if (isR) data.rows = Math.max(1, Math.min(1000, data.rows + delta));
+  else data.cols = Math.max(1, Math.min(52, data.cols + delta));
+  return data;
+}

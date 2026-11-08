@@ -65,7 +65,7 @@ const mr = {
   rowAdd: 'तक्त्यात ओळ जोडा', rowDel: 'तक्त्यातील ओळ काढा', colAdd: 'तक्त्यात स्तंभ जोडा', colDel: 'तक्त्यातील स्तंभ काढा', placeCaretInTable: 'आधी तक्त्यात क्लिक करा.',
   enterLink: 'दुवा (URL) टाका', badLink: 'दुवा http:// किंवा https:// ने सुरू व्हावा.', text: 'मजकूर',
   md_edit: 'लेखन', md_split: 'दोन्ही', md_preview: 'पूर्वावलोकन', preview: 'पूर्वावलोकन', language_: 'भाषा', wrapLines: 'ओळी गुंडाळा',
-  formulaBar: 'सूत्र पट्टी', row: 'ओळ', column: 'स्तंभ', exportCSV: 'CSV निर्यात',
+  formulaBar: 'सूत्र पट्टी', rowBelow: 'खाली ओळ', delThisRow: 'ही ओळ', colRight: 'उजवीकडे स्तंभ', delThisCol: 'हा स्तंभ', delRowColQ: '{x} हटवायची? त्यातला सगळा मजकूर जाईल.', deletedX: '{x} हटवली', row: 'ओळ', column: 'स्तंभ', exportCSV: 'CSV निर्यात',
   sheetHelp: 'सूत्रे "=" ने सुरू करा: =A1+B1, =SUM(A1:A10), =AVERAGE(B1:B5), =MIN(), =MAX(), =COUNT(). + - * / ^ आणि कंस चालतात.',
   newTask: 'नवीन काम…', tasksDone: '{done}/{total} पूर्ण', done: 'पूर्ण', task: 'काम', hideCompleted: 'पूर्ण झालेली लपवा', clearCompleted: 'पूर्ण झालेली काढा', moveUp: 'वर हलवा',
 };
@@ -136,7 +136,7 @@ const en = {
   rowAdd: 'Add table row', rowDel: 'Delete table row', colAdd: 'Add table column', colDel: 'Delete table column', placeCaretInTable: 'Click inside a table first.',
   enterLink: 'Enter link (URL)', badLink: 'Links must start with http:// or https://.', text: 'text',
   md_edit: 'Write', md_split: 'Both', md_preview: 'Preview', preview: 'Preview', language_: 'Language', wrapLines: 'Wrap lines',
-  formulaBar: 'Formula bar', row: 'Row', column: 'Column', exportCSV: 'Export CSV',
+  formulaBar: 'Formula bar', rowBelow: 'Row below', delThisRow: 'This row', colRight: 'Column right', delThisCol: 'This column', delRowColQ: 'Delete {x}? Everything in it will be removed.', deletedX: '{x} deleted', row: 'Row', column: 'Column', exportCSV: 'Export CSV',
   sheetHelp: 'Start formulas with "=": =A1+B1, =SUM(A1:A10), =AVERAGE(B1:B5), =MIN(), =MAX(), =COUNT(). + - * / ^ and brackets work.',
   newTask: 'New task…', tasksDone: '{done}/{total} done', done: 'Done', task: 'Task', hideCompleted: 'Hide completed', clearCompleted: 'Remove completed', moveUp: 'Move up',
 };

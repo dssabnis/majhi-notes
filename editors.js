@@ -1,8 +1,8 @@
 // Note editors. Each mount returns { focus(), insertText(t), flush(), destroy(), refresh?() }.
 // Content is reported through opts.onChange(text).
 import { t } from './i18n.js';
-import { h, sanitizeHtml, renderMarkdown, openMenu, ask, toast } from './ui.js';
-import { evaluateSheet, displayValue, parseSheet, refName, colName, sheetToCSV, parseRef } from './sheet.js';
+import { h, sanitizeHtml, renderMarkdown, openMenu, ask, toast, confirmDlg } from './ui.js';
+import { evaluateSheet, displayValue, parseSheet, refName, colName, sheetToCSV, parseRef, shiftSheet } from './sheet.js';
 import { parseTasks, serializeTasks } from './backup.js';
 import { uid, debounce } from './util.js';
 
@@ -463,12 +463,19 @@ export function mountSheet(el, note, opts) {
     save();
   }
   table.addEventListener('click', e => {
+    const th = e.target.closest('th.rh, th.ch');
+    if (th && !e.target.closest('.grip')) {
+      const p = parseRef(active) || { c: 0, r: 0 };
+      const ref = th.classList.contains('rh') ? refName(p.c, +th.querySelector('.hd').dataset.r) : refName([...th.parentNode.children].indexOf(th) - 1, p.r);
+      const n = table.querySelector(`input[data-ref="${ref}"]`); if (n) n.focus();
+      return;
+    }
     const inp = e.target.closest('input.cell'); if (!inp || !(e.ctrlKey || e.metaKey)) return;
     const url = urlOf(values[inp.dataset.ref]); if (url) { e.preventDefault(); window.open(url, '_blank', 'noopener'); }
   });
   table.addEventListener('focusin', e => {
     const inp = e.target.closest('input.cell'); if (!inp) return;
-    active = inp.dataset.ref; addr.textContent = active;
+    active = inp.dataset.ref; markActive();
     inp.value = data.cells[active] ?? ''; fx.value = inp.value;
     inp.classList.remove('err', 'num');
   });
@@ -499,21 +506,40 @@ export function mountSheet(el, note, opts) {
 
   const btn = (label, fn) => h('button', { type: 'button', class: 'chip', onclick: fn, disabled: !!opts.readOnly && !/CSV/.test(label) }, label);
   const tools = h('div', { class: 'toolbar' },
-    btn('+ ' + t('row'), () => { data.rows = Math.min(1000, data.rows + 1); save(); draw(); }),
-    btn('− ' + t('row'), () => { if (data.rows > 1) { trim('r'); data.rows--; save(); draw(); } }),
-    btn('+ ' + t('column'), () => { data.cols = Math.min(52, data.cols + 1); save(); draw(); }),
-    btn('− ' + t('column'), () => { if (data.cols > 1) { trim('c'); data.cols--; save(); draw(); } }),
+    btn('+ ' + t('rowBelow'), () => rowColOp('r', +1)),
+    btn('🗑 ' + t('delThisRow'), () => rowColOp('r', -1)),
+    btn('+ ' + t('colRight'), () => rowColOp('c', +1)),
+    btn('🗑 ' + t('delThisCol'), () => rowColOp('c', -1)),
     h('button', { type: 'button', class: 'chip', onclick: () => opts.download({ name: (note.title || 'sheet') + '.csv', mime: 'text/csv', content: sheetToCSV(data) }) }, t('exportCSV')),
     h('button', { type: 'button', class: 'chip', onclick: () => toast(t('sheetHelp'), 8000) }, '?'),
   );
-  function trim(which) {
-    for (const k of Object.keys(data.cells)) {
-      const p = parseRef(k);
-      if (p && ((which === 'r' && p.r === data.rows - 1) || (which === 'c' && p.c === data.cols - 1))) delete data.cells[k];
+  async function rowColOp(axis, delta) {
+    if (opts.readOnly) return;
+    const p = parseRef(active) || { c: 0, r: 0 };
+    const isR = axis === 'r';
+    if (delta < 0) {
+      if ((isR ? data.rows : data.cols) <= 1) return;
+      const label = isR ? t('row') + ' ' + (p.r + 1) : t('column') + ' ' + colName(p.c);
+      if (!await confirmDlg(t('delRowColQ').replace('{x}', label), { danger: true, okText: t('delete') })) return;
+      shiftSheet(data, axis, isR ? p.r : p.c, -1);
+      const nr = isR ? Math.min(p.r, data.rows - 1) : p.r, nc = isR ? p.c : Math.min(p.c, data.cols - 1);
+      active = refName(nc, nr);
+      toast(t('deletedX').replace('{x}', label));
+    } else {
+      if (isR ? data.rows >= 1000 : data.cols >= 52) return;
+      shiftSheet(data, axis, (isR ? p.r : p.c) + 1, +1);
+      active = isR ? refName(p.c, p.r + 1) : refName(p.c + 1, p.r);
     }
-    if (which === 'c' && data.colW) { delete data.colW[data.cols - 1]; if (!Object.keys(data.colW).length) delete data.colW; }
-    if (which === 'r' && data.rowH) { delete data.rowH[data.rows - 1]; if (!Object.keys(data.rowH).length) delete data.rowH; }
     values = evaluateSheet(data.cells);
+    save(); draw(); markActive();
+    const n = table.querySelector(`input[data-ref="${active}"]`); if (n) n.focus();
+  }
+  function markActive() {
+    const p = parseRef(active); addr.textContent = active;
+    table.querySelectorAll('.act-h').forEach(x => x.classList.remove('act-h'));
+    if (!p) return;
+    const rh = table.querySelector(`th.rh .hd[data-r="${p.r}"]`); if (rh) rh.closest('th').classList.add('act-h');
+    const ch = table.querySelectorAll('th.ch')[p.c]; if (ch) ch.classList.add('act-h');
   }
   el.append(tools, h('div', { class: 'fx-bar' }, addr, fx), host);
   draw();
