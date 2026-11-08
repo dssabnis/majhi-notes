@@ -375,12 +375,56 @@ export function mountSheet(el, note, opts) {
   const host = h('div', { class: 'sheet-wrap' }, table);
   const save = () => opts.onChange(JSON.stringify(data));
 
+  const DEF_W = 110, DEF_H = 38, MIN_W = 36, MAX_W = 800, MIN_H = 26, MAX_H = 300;
+  const colW = c => (data.colW && data.colW[c]) || DEF_W;
+  const rowH = r => (data.rowH && data.rowH[r]) || DEF_H;
+  function applySize(kind, i, px) {
+    const sel = kind === 'c' ? `input.cell[data-c="${i}"]` : `input.cell[data-r="${i}"]`;
+    table.querySelectorAll(sel).forEach(inp => { if (kind === 'c') inp.style.width = px + 'px'; else inp.style.height = px + 'px'; });
+  }
+  function setSize(kind, i, px) {
+    const key = kind === 'c' ? 'colW' : 'rowH';
+    const def = kind === 'c' ? DEF_W : DEF_H;
+    if (!data[key]) data[key] = {};
+    if (px === def) delete data[key][i]; else data[key][i] = px;
+    if (!Object.keys(data[key]).length) delete data[key];
+  }
+  // Drag the small handle on a column's right edge / a row's bottom edge (mouse or finger). Double-tap resets.
+  function grip(kind, i) {
+    const g = h('span', { class: 'grip grip-' + kind, title: t('resizeHint'), 'aria-hidden': 'true' });
+    if (opts.readOnly) return g;
+    let start = 0, base = 0, size = 0, lastTap = 0;
+    g.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      const now = Date.now();
+      if (now - lastTap < 350) { lastTap = 0; const d = kind === 'c' ? DEF_W : DEF_H; setSize(kind, i, d); applySize(kind, i, d); save(); return; }
+      lastTap = now;
+      start = kind === 'c' ? e.clientX : e.clientY; base = kind === 'c' ? colW(i) : rowH(i); size = base;
+      try { g.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      g.classList.add('dragging');
+      const move = ev => {
+        const d = (kind === 'c' ? ev.clientX : ev.clientY) - start;
+        size = Math.round(Math.min(kind === 'c' ? MAX_W : MAX_H, Math.max(kind === 'c' ? MIN_W : MIN_H, base + d)));
+        applySize(kind, i, size);
+      };
+      const up = () => {
+        g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up);
+        g.classList.remove('dragging');
+        if (size !== base) { setSize(kind, i, size); save(); }
+      };
+      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    });
+    return g;
+  }
+
   function draw() {
-    const head = h('tr', {}, h('th', { class: 'corner' }), ...Array.from({ length: data.cols }, (_, c) => h('th', {}, colName(c))));
-    const rows = Array.from({ length: data.rows }, (_, r) => h('tr', {}, h('th', {}, String(r + 1)),
+    const head = h('tr', {}, h('th', { class: 'corner' }), ...Array.from({ length: data.cols }, (_, c) => h('th', { class: 'ch' }, colName(c), grip('c', c))));
+    const rows = Array.from({ length: data.rows }, (_, r) => h('tr', {}, h('th', { class: 'rh' }, String(r + 1), grip('r', r)),
       ...Array.from({ length: data.cols }, (_, c) => {
         const ref = refName(c, r);
-        const inp = h('input', { class: 'cell', 'data-ref': ref, 'aria-label': ref, readOnly: !!opts.readOnly });
+        const inp = h('input', { class: 'cell', 'data-ref': ref, 'data-c': String(c), 'data-r': String(r), 'aria-label': ref, readOnly: !!opts.readOnly });
+        if (data.colW && data.colW[c]) inp.style.width = data.colW[c] + 'px';
+        if (data.rowH && data.rowH[r]) inp.style.height = data.rowH[r] + 'px';
         inp.value = displayValue(values[ref]);
         if (typeof values[ref] === 'number') inp.classList.add('num');
         if (values[ref] && values[ref].err) inp.classList.add('err');
@@ -447,6 +491,8 @@ export function mountSheet(el, note, opts) {
       const p = parseRef(k);
       if (p && ((which === 'r' && p.r === data.rows - 1) || (which === 'c' && p.c === data.cols - 1))) delete data.cells[k];
     }
+    if (which === 'c' && data.colW) { delete data.colW[data.cols - 1]; if (!Object.keys(data.colW).length) delete data.colW; }
+    if (which === 'r' && data.rowH) { delete data.rowH[data.rows - 1]; if (!Object.keys(data.rowH).length) delete data.rowH; }
     values = evaluateSheet(data.cells);
   }
   el.append(tools, h('div', { class: 'fx-bar' }, addr, fx), host);

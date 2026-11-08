@@ -211,7 +211,12 @@ export function emptySheet(rows = 20, cols = 8) { return { rows, cols, cells: {}
 export function parseSheet(text) {
   try {
     const d = JSON.parse(text || '');
-    if (d && typeof d === 'object' && d.cells) return { rows: Math.max(1, d.rows | 0 || 20), cols: Math.max(1, d.cols | 0 || 8), cells: d.cells };
+    if (d && typeof d === 'object' && d.cells) {
+      const out = { rows: Math.max(1, d.rows | 0 || 20), cols: Math.max(1, d.cols | 0 || 8), cells: d.cells };
+      if (d.colW && typeof d.colW === 'object') out.colW = d.colW;
+      if (d.rowH && typeof d.rowH === 'object') out.rowH = d.rowH;
+      return out;
+    }
   } catch (e) { /* fall through */ }
   // Plain text / CSV fallback: one line per row, comma or tab separated
   const s = emptySheet();
